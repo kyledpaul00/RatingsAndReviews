@@ -1,0 +1,148 @@
+Ratings and Reviews - Part 3
+
+For part 3 of ratings and reviews you are provided the solutions to part 2 with a few modifications as a starting point.
+You will further modify this solution to be able to rate more than just songs by applying the OOP principles we've been
+studying in class. To do this you will refactor the existing code and reuse as much code as possible while adapting it
+to function with more than just songs. Once the code is refactored you will add functionality to sort rated items and
+generate top k lists based on different criteria.
+
+Notes:
+-Part 3 of each project will be worth 6 proficiency points instead of 4
+-All Utilities and RatingsManager methods have been made static
+-There is a new class called Review that stores an integer rating along with a String review. This will replace
+the int ratings used in the first 2 parts of this project.
+-averageRatingOfReviews and bayesianAverageOfReviews have been added to Utilities to compute averages of Reviews
+-Each step is worth 1 Proficiency Point for a total of 6 available points
+-The amazon reviews file only contains a small subset of the reviews for each product which may cause a discrepancy
+between the computed star ratings and the rating on the site. Specifically, all reviews containing commas were removed
+in order to simplify your parsing tasks allowing you to use split(",")
+
+Amazon data provided by:
+Ups and downs: Modeling the visual evolution of fashion trends with one-class collaborative filtering
+R. He, J. McAuley
+WWW, 2016
+
+and
+
+Image-based recommendations on styles and substitutes
+J. McAuley, C. Targett, J. Shi, A. van den Hengel
+SIGIR, 2015
+
+
+** Step 1: Implement Ratable and Refactor Song
+Create an abstract class called Ratable in the code.ratables package and refactor the Song class to extend Ratable. This
+class will be extended by any class that can be rated on a 1-5 scale and we will move much of the code from the Song
+class into the Ratable abstract class. This will make it easier to add new types that can be rated beyond songs
+without rewriting our entire program.
+
+You must add the following to the Ratable abstract class while updating the Song class where noted.
+
+Instance variables:
+-Add an ArrayList of Review objects to the Ratable abstract class to store all the ratings and reviews of each Ratable
+--This replaces the ratings ArrayList variable in the Song class (Remove ratings from the Song class)
+-Add a String variable to the Ratable abstract class that will store the id of each Ratable
+--This replaces the youtubeID variable in the Song class (Remove youtubeID from the Song class)
+--In the Song constructor assign the id variable inherited from the Ratable class to the YouTube id
+
+Constructor:
+-Add a default constructor to Ratable that initializes the ArrayList of Reviews to an empty ArrayList
+
+Abstract methods:
+-Add getLink() to Ratable that will return a link as a String corresponding to the Ratable
+--Implement this method in the Song class to return the YouTube Link for the song using the inherited id variable
+-Add getDescription() to Ratable that will return a String description of the Ratable
+--Implement this method in the Song class to return a String in the format "artist - title"
+
+Concrete methods:
+-Add getID() to Ratable that returns the value of the instance variable storing the id
+--Remove getYoutubeID() from the Song class
+-Add getReviews() to Ratable that returns the instance variable storing the ArrayList of Reviews
+--Remove the method with this same name from the Song class
+-Add addRating(int rating) to Ratable that adds a new Review to the reviews instance variable
+--the new review will only contain an int rating without a text review
+--Remove the method with this same name from the Song class
+-Add addRatingWithReview(int rating, String review) to Ratable that adds a new Review with an int rating and a text
+review to the reviews instance variable
+
+
+
+** Step 2: Refactor RatingsManager to use Ratable instead of Song
+-In RatingsManager, rewrite the ReadSongCSVFile method to return an ArrayList<Ratable> instead of a HashMap<String, Song>
+--Hint: You can still create the HashMap and leave most of the method in tact, but add all the values of the HashMap
+into a new ArrayList at the end of the method and return the ArrayList. Since Song is now a Ratable you can add the
+Songs to an ArrayList of type Ratable
+-In RatingsManager, modify the allFives and bayesianRatingThreshold methods to take an ArrayList<Ratable> instead of
+a String representing a filename as input and return an ArrayList of type Ratable instead of an ArrayList of type Song
+
+
+
+** Step 3: Amazon ratings and reviews
+Now that the existing code base has been refactored we will take advantage of the new structure and add more
+functionality using OOP. For this step you will create a Product class in the code.ratables package that extends the
+Ratable abstract class. This class will be used to store ratings and reviews of Amazon products. The data will be
+provided from http://jmcauley.ucsd.edu/data/amazon/. Implement the Product class with the following.
+
+Constructor:
+-A constructor that takes 1 String and sets its value to the id variable inherited from the Ratable class
+
+Abstract Methods:
+-Implement the inherited getLink() method to return the String "https://www.amazon.com/dp/" concatenated with the value
+of the id variable
+-Implement the inherited getDescription() method to return only the value of the inherited id variable
+--Note: The product details are not provided with the data. You can visit the product link what's being rated
+
+File Reader
+-In the RatingsManager class implement the readProductCSVFile method to read a file containing Product ratings and
+reviews in the format "asin,reviewerName,rating,review" where asin is the id for the product. You must add both the
+rating and review to each Product object similar to the way ratings were added to Songs. To add both you should use
+the method addRatingWithReview(int rating, String review) inherited from the Ratable class that you implemented.
+
+
+
+** Step 4: Custom sorting
+Study the provided AlphabeticalComparator class and its sortAlphabetically method before attempting this step. This
+class and method are provided as an example of sorting custom types. By using these we can sort an ArrayList of
+Ratables alphabetically by their description.
+
+a. Create and implement a class named NumberOfReviewsComparator in the code.comparators package that sorts Ratables by
+number of reviews in decreasing order and implement the sortByNumberOfReviews method in RatingsManager to sort an
+ArrayList of Ratables by number of ratings (the size of the reviews ArrayList).
+
+b. Create and implement a class named AverageRatingComparator in the code.comparators package that sorts by average
+rating in decreasing order and implement the sortByAverageRating method in RatingsManager that sorts an ArrayList of
+Ratables by average rating.
+
+
+
+** Step 5: Top k lists
+Implement the getTopK method according to the comments in the RatingsManager class. This method will produce top k lists
+based on an input Comparator. By using the Ratable abstract class and the Comparator<Ratable> interface we can use this
+one method to compute top k lists of Songs or Products based on average ratings, bayesian rating, number of reviews, or
+alphabetically by description. We can also add more Ratables or Comparators that will be compatible with our existing
+code as long as we implement the few abstract methods required by inherited types.
+
+
+
+** Step 6: Sorting by bayesian average
+Create and implement a class named BayesianAverageComparator in the code.comparators package that sorts by bayesian
+rating in decreasing order and implement the sortByBayesianAverage method in RatingsManager that sorts an ArrayList of
+Ratables by bayesian rating. This method takes as parameters the two numbers required to compute the bayesian averages.
+Since these numbers must be used by BayesianAverageComparator, they must be "sent" to an instance of this class. To do
+this you can implement the following in the BayesianAverageComparator class.
+
+-Instance variables to store the 2 numbers
+-A constructor that takes the 2 numbers as parameters and assigns their values to the instance variables
+-Use these 2 instance variables when comparing the two Ratables in the compare method
+
+Remember that the Comparator class are just like any other classes and you can use all the techniques we've used while
+studying classes and objects. The ony difference is that you must also implement the compare method from the Comparator
+interface. In this case we'll use a constructor and instance variables to help us implement the compare method.
+
+
+
+** Congratulations!
+You've reached the end of the Ratings and Reviews project! You have successfully written a fairly large java program
+using a wide variety of programming principles from variables and expressions to inheritance and polymorphism. You've
+been applying data structures, file IO, loops, conditionals, algorithms, objects, and classes. If you are feeling at all
+overwhelmed, remember all these concept that you have learned over the past few months and how far you've come in a
+short amount of time.
